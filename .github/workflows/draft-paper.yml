@@ -1,0 +1,16 @@
+name: Build JOSS paper PDF
+
+on:
+  push:
+    paths:
+      - paper.md
+      - paper.bib
+
+jobs:
+  paper:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: openjournals/openjournals-draft-action@v1
+        with:
+          journal: joss
