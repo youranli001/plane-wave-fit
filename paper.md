@@ -1,6 +1,6 @@
 ---
 title: "YourSoftware: A brief description of what it does"
-date: 9 October 2024
+date: 2 Feb 2026
 tags:
   - python
   - scientific-computing
