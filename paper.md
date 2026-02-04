@@ -44,14 +44,13 @@ uses precomputed modal properties to constrain the fitting of surface height ano
 
 1.  **Parameter Lookup**: This notebook provides an example to access global internal tide parameters achived on Zenodo. These parameters were generated using `dynmodes` based on the World Ocean Atlas 2023 (WOA23) climatology. While `dynmodes` provides theoretical vertical mode structures and eigenspeeds from stratification profiles, this dataset provides additional conversion factors to link these vertical modes to surface observations. Once fitted amp is get, ... can be calculated. allowing users to retrieve depth integrated energy estimates without performing vertical integration themselves.
 
-2.  **Plane-Wave Fitting**: Internal tide parameters (amplitude $A_m$, phase $\phi_m$, and direction $\theta_m$) are determined by fitting plane waves to SSHA (Equation \ref{eq:multiwave_superposition}). At a given tidal frequency, multiple internal tides may exist at a single site; therefore, the wave field is represented as a superposition of multiple components
+2.  **Plane-Wave Fitting**: Internal tide parameters (amplitude $A_m$, phase $\phi_m$, and direction $\theta_m$) are estimated by fitting plane waves to SSHA. For a specified tidal frequency $\omega$ and horizontal wavenumber $k$ (obtained from a precomputed lookup table), the modeled wave field is written as
     
     $$\eta(x, y, t) = \sum_{m=1}^{N} A_m \cos(k_{x,m} x + k_{y,m} y - \omega t - \phi_m)$$
     
-    where $k$ and omega is ... and need to be pre-determined. The solver uses a linear least-squares approach (`numpy.linalg.lstsq`), which is robust and allows for the simultaneous estimation of multiple wave components (e.g., $M_2$, $S_2$, $K_1$) and their associated uncertainties.
+The optimal propagation direction $\theta$ is determined using a directional scanning approach. The algorithm evaluates all azimuths from $1^\circ$ to $360^\circ$; at each angle, a linear least-squares problem is solved to estimate the sine and cosine coefficients $(\beta_1, \beta_2)$. The direction associated with the maximum fitted amplitude is selected as the dominant propagation direction for the wave component under consideration.
 
-3. Uncertainty Quantification
-A critical feature of **PlaneWaveFit** is the rigorous quantification of uncertainty. The software computes the covariance matrix of the fitted coefficients to derive standard errors for both amplitude and phase. This capability is essential for distinguishing weak tidal signals from the energetic mesoscale eddy field, a common challenge in altimetry data.
+Following the selection of the optimal propagation direction, parameter uncertainties are estimated from the covariance matrix of the least-squares solution. The covariance is derived from the residual variance of the fitted model.
 
 # Research impact statement
 
@@ -59,7 +58,7 @@ A critical feature of **PlaneWaveFit** is the rigorous quantification of uncerta
 
 It has been applied to map internal tides .
  
-**PlaneWaveFit** has been successfully applied to map coherent mode-1 $M_2$ internal tides across the Southern Ocean using daily-repeat SWOT Calibration/Validation data [@Li2024]. It has demonstrated the ability to resolve tidal beams in highly energetic regions like the Southwest Indian Ridge and Drake Passage. Evidence of its impact includes the detection of phase curvature consistent with tidal refraction by ocean fronts—a signal often missed by conventional altimetry. By providing a reproducible framework, the package enables researchers to quantify tide-eddy interactions and energy dissipation across various observational and model-based platforms.
+**PlaneWaveFit** has been successfully applied to map coherent mode-1 $M_2$ internal tides across the Southern Ocean using daily-repeat SWOT Calibration/Validation data. It has demonstrated the ability to resolve tidal beams in highly energetic regions like the Southwest Indian Ridge and Drake Passage. Evidence of its impact includes the detection of phase curvature consistent with tidal refraction by ocean fronts—a signal often missed by conventional altimetry. By providing a reproducible framework, the package enables researchers to quantify tide-eddy interactions and energy dissipation across various observational and model-based platforms.
 
 # Research impact statement
 
