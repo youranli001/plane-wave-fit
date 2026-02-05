@@ -1,0 +1,15 @@
+numpy
+scipy
+xarray
+pandas
+matplotlib
+tables
+# pprint
+zenodo-get
+# pathlib
+matplotlib
+cartopy
+dask
+scipy
+
+
