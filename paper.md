@@ -153,7 +153,7 @@ amp3, theta3, phi3, model3, var3, _, _, uncert3 = utils.fit_wave(
 
 print(f"Wave 1 Amplitude: {amp1:.4f} m, Direction: {theta1:.2f} deg")
 
-
+```
 
 # Research impact statement
 
