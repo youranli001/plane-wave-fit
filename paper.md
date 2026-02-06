@@ -27,7 +27,7 @@ Internal tides are internal gravity waves generated when tidal flows interact wi
 
 The software implements a two-dimensional plane-wave fitting approach to resolve multiple wave components. It is broadly applicable to data from satellite missions, such as the Surface Water and Ocean Topography (SWOT) mission, numerical ocean model outputs, and synthetic datasets. It also provides built-in access to precomputed internal tide parameters derived from the climatology in the World Ocean Atlas dataset. These parameters specifically target the dominant mode-1 $M_2$ internal tide and include the necessary conversion ratios to calculate depth-integrated energy and energy flux directly from the fitted surface amplitudes.
 
-![Example of plane wave fit performed. Top left: A 2D snapshot of sea surface height anomalies (SSHA) from the SWOT satellite on April 2 2023. Remaining panels: Results of the iterative plane-wave fitting algorithm. The polar plots show the fitted amplitude (mm) as a function of propagation direction for the three most energetic wave components identified. Each panel includes a summary of the extracted wave parameters—maximum amplitude, propagation angle, and phase.](figure.png){#fig:example}
+![Example of plane wave fit performed. Top left: Sea surface height anomalies (SSHA) from the SWOT satellite on April 2 2023. Remaining panels: Results of the iterative plane-wave fitting algorithm. The polar plots show the fitted amplitude (mm) as a function of propagation direction for the three most energetic wave components identified. Each panel includes a summary of the extracted wave parameters—maximum amplitude, propagation angle, and phase.](figure.png){#fig:example}
 
 
 
@@ -38,9 +38,11 @@ High-resolution ocean observations and numerical models provide two-dimensional 
 Commonly used packages like `UTide`[@codiga2011unified] or `T_TIDE` [@pawlowicz2002classical] are designed for temporal harmonic analysis at fixed locations. While effective for stationary records like tide gauges, they do not resolve the spatial propagation of internal tides. PlaneWaveFit addresses this limitation by implementing a two-dimensional fitting approach that extracts $M_2$ internal tides that are both spatially and temporally coherent. This dual coherence constraint makes the method significantly less sensitive to mesoscale contamination, allowing for the robust detection of tidal beams even in energetic ocean regions.
 
 # State of the field
-Two-dimensional plane-wave fitting has been widely applied to extract low-mode internal tidal signals from both multi-satellite altimetry data [@zhao2011internal; @zhao2016global; @zhao2017global; @zaron2019baroclinic; @zhao2024internal]. PlaneWaveFit provides a open-source, documented implementation with uncertainty quantification.
+While two-dimensional plane-wave fitting methods have proven effective for extracting internal tidal signals from SSH data [@zhao2011internal; @zhao2016global; @zhao2017global; @zaron2019baroclinic; @zhao2024internal], open-source implementations with documentation and uncertainty quantification have been lacking. PlaneWaveFit addresses this gap.
 
-The package complements vertical mode solvers like `dynmodes` [@klinck_dynmodes]. While `dynmodes` computes theoretical structures and eigenspeeds from stratification, PlaneWaveFit extends this in two ways. First, it provides global precomputed parameters from World Ocean Atlas 2023 for users without local stratification data. Second, it includes conversion factors needed to translate SSH amplitudes into full-depth energy estimates. This allows users to either perform standalone 2D fits or combine them with the physical parameters to estimate energetics directly.
+The package complements vertical mode solvers like `dynmodes` [@klinck_dynmodes]. While `dynmodes` computes theoretical structures from stratification, PlaneWaveFit bridges the gap to observations. It integrates a global database of precomputed conversion factors (derived from World Ocean Atlas 2023), allowing users to translate fitted surface amplitudes directly into full-depth energetics without requiring local stratification data.
+
+
 
 # Software design
 
@@ -71,39 +73,20 @@ Following the selection of the optimal propagation direction, parameter uncertai
 ### Usage Examples
 
 
-The following example illustrates the use of fit_wave functionality to extract wave amplitude, phase, and direction from SWOT data. Note that the ssh data is achived in zenodo, and will be downloaded to a `data/` directory within your current working folder.
+The following example illustrates the use of fit_wave functionality to extract wave amplitude, phase, and direction from SWOT data. Note that the ssh data is archived in zenodo, and will be downloaded to a `data/` directory within your current working folder.
 
 ```python
 from zenodo_get import download
 import utils  
 
-# 1. Download the SWOT SSHA example dataset
+# Download the SWOT SSHA example dataset
 doi = "10.5281/zenodo.18408783"
 ssha_fn = "SWOT_CalVal_SSHA_35W_35p5S.nc"
 data_dir = Path("data/zenodo")
 download(record_or_doi=doi, output_dir=data_dir, file_glob=ssha_fn)
 ds = xr.open_dataset(data_dir / ssha_fn) # Load the dataset
 
-# 2. Plot a snapshot of SSHA (Optional)
-cycle = 0
-fig, ax = plt.subplots(figsize=(6, 4))
-pcm = ax.pcolormesh(
-    ds.longitude,
-    ds.latitude,
-    ds.ssha.isel(num_cycles=cycle),
-    shading="auto",
-    cmap="RdBu_r"
-)
-cbar = plt.colorbar(pcm, ax=ax)
-cbar.set_label("SSHA (m)")
-ax.set_xlabel("Longitude (°)")
-ax.set_ylabel("Latitude (°)")
-ax.set_title(f"SWOT SSHA (Cycle {cycle})")
-ax.set_aspect("equal", adjustable="box")
-plt.tight_layout()
-plt.show()
-
-# 3. Prepare Input Coordinates
+# Prepare Input Coordinates
 # Convert Lat/Lon to Cartesian coordinates (km)
 lon_example, lat_example = -35.0, -35.5
 distX, distY = utils.lonlat2xy(
@@ -131,12 +114,11 @@ T_3D_dt64 = np.repeat(
 )
 T_3D = utils.datetime64_to_matlab_datenum(T_3D_dt64)
 
-# 4. Define Wave Parameters (M2 Internal Tide)
-# Frequency [rad/day] and Wavenumber [rad/km]
-omega = 2 * np.pi / (12.42 * 3600) * 86400  
-k = 0.04124732611475162
+# Define Wave Parameters (M2 Internal Tide)
+omega = 2 * np.pi / (12.42 * 3600) * 86400 # Frequency [rad/day]
+k = 0.04124732611475162 # Wavenumber [rad/km]
 
-# 5. Apply the Plane Wave Fit (Iterative approach)
+# Apply the Plane Wave Fit (Iterative approach)
 # Iteration 1: Fit dominant wave
 amp1, theta1, phi1, model1, var1, _, _, uncert1 = utils.fit_wave(
     ssha, k, omega, X_3D, Y_3D, T_3D
@@ -154,9 +136,11 @@ amp3, theta3, phi3, model3, var3, _, _, uncert3 = utils.fit_wave(
 
 ```
 
+
 # Research impact statement
 
-PlaneWaveFit provides an open-source, modular implementation of 2D plane-wave fitting for internal tides. Applied to SWOT data in the Southern Ocean [cite my paper], the software successfully extracted coherent tidal beams and refraction patterns in regions with strong mesoscale eddies. By combining fitted surface amplitudes with the precomputed conversion database, researchers can estimate depth-integrated energy and flux directly from satellite observations. 
+PlaneWaveFit provides an open-source, modular implementation of two-dimensional plane-wave fitting for internal tides. Applied to SWOT data in the Southern Ocean [@li2026], the software successfully extracted coherent tidal beams and refraction patterns in regions with strong mesoscale eddies. The technique has been applied to map internal tides globally using multi-satellite altimetry [@zhao2016global; @zaron2019baroclinic; @zhao2024internal]. By combining fitted surface amplitudes with the precomputed conversion database, researchers can estimate depth-integrated energy and flux directly from satellite observations, facilitating a deeper understanding of tidal dissipation and mixing processes.
+
 
 
 # Future Directions
