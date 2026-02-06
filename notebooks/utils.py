@@ -4,7 +4,6 @@
 """
 This file contains routines for plane-wave fitting of internal tides (or waves with a specific wavenumber and wavefrequency)
 
-Author: Youran Li
 Date: First version: 02-01-2026
 
 Dependencies:
