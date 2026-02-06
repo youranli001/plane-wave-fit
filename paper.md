@@ -158,6 +158,12 @@ amp3, theta3, phi3, model3, var3, _, _, uncert3 = utils.fit_wave(
 
 PlaneWaveFit provides an open-source, modular implementation of 2D plane-wave fitting for internal tides. Applied to SWOT data in the Southern Ocean [cite my paper], the software successfully extracted coherent tidal beams and refraction patterns in regions with strong mesoscale eddies. By combining fitted surface amplitudes with the precomputed conversion database, researchers can estimate depth-integrated energy and flux directly from satellite observations. 
 
+
+# Future Directions
+
+When handling datasets with high temporal resolution (e.g., hourly model output) over long time windows, fitting plane waves directly in the time domain can become computationally expensive. Future versions may implement a frequency-domain alternative. In this approach, the time series is first transformed using a Fourier transform to extract the complex field at the target tidal frequency (e.g., $M_2$). 
+
+
 # AI usage disclosure
 
 No generative AI tools were used in the development of this software, the writing of this manuscript, or the preparation of supporting materials.
