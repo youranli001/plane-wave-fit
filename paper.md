@@ -23,7 +23,7 @@ bibliography: paper.bib
 
 # Summary
 
-Internal tides are internal gravity waves generated when tidal flows interact with seafloor topography. These waves transport energy across ocean basins and drive mixing that affects global ocean circulation and climate. In this paper, we introduce PlaneWaveFit, an open-source software package with a Python interface that extracts the amplitude, phase, and propagation direction of internal tides from Sea Surface Height (SSH) observations, with uncertainty estimates for both amplitude and phase provided \autoref{fig:example}. 
+Internal tides are internal gravity waves generated when tidal flows interact with seafloor topography. These waves transport energy across ocean basins and drive mixing that affects global ocean circulation and climate. In this paper, we introduce PlaneWaveFit, an open-source software package with a Python interface that extracts the amplitude, phase, and propagation direction of internal tides from Sea Surface Height (SSH) observations, with uncertainty estimates for both amplitude and phase provided \autoref{fig:figure1}. 
 
 
 The software implements two complementary plane-wave fitting approaches: a time-domain method applicable to any spatiotemporal dataset (including irregularly-sampled satellite missions such as SWOT), and a frequency-domain method optimized for evenly-sampled, high-temporal-resolution datasets (e.g., hourly numerical model outputs). Both methods resolve multiple wave components. It also provides built-in access to precomputed internal tide parameters derived from the climatology in the World Ocean Atlas dataset. These parameters specifically target the dominant mode-1 $M_2$ internal tide and include the necessary conversion ratios to calculate depth-integrated energy and energy flux directly from the fitted surface amplitudes.
@@ -31,7 +31,7 @@ The software implements two complementary plane-wave fitting approaches: a time-
 <!--
 The software implements a two-dimensional plane-wave fitting approach to resolve multiple wave components. It is broadly applicable to data from satellite missions, such as the Surface Water and Ocean Topography (SWOT) mission, numerical ocean model outputs, and synthetic datasets. It also provides built-in access to precomputed internal tide parameters derived from the climatology in the World Ocean Atlas dataset. These parameters specifically target the dominant mode-1 $M_2$ internal tide and include the necessary conversion ratios to calculate depth-integrated energy and energy flux directly from the fitted surface amplitudes.
 -->
-![Example of plane wave fit performed. Top left: Sea surface height anomalies (SSHA) from the SWOT satellite on April 2 2023. Remaining panels: Results of the iterative plane-wave fitting algorithm. The polar plots show the fitted amplitude (mm) as a function of propagation direction for the three most energetic wave components identified. Each panel includes a summary of the extracted wave parameters—maximum amplitude, propagation angle, and phase.](figure.png){#fig:example}
+![Example of plane wave fit performed. Top left: Sea surface height anomalies (SSHA) from the SWOT satellite on April 2 2023. Remaining panels: Results of the iterative plane-wave fitting algorithm. The polar plots show the fitted amplitude (mm) as a function of propagation direction for the three most energetic wave components identified. Each panel includes a summary of the extracted wave parameters—maximum amplitude, propagation angle, and phase.](figures/figure1.png){#fig:figure1}
 
 
 
@@ -153,7 +153,9 @@ k\,y\sin\theta_m
 \right)
 $$
 
-where $A_m$ is the amplitude, $\theta_m$ is the propagation direction, and $\phi_m$ is the spatial phase. The method performs 360 spatial fits (one per degree) to identify propagation directions. However, because the FFT has collapsed the time dimension, this produces two-lobe polar plots (insert figure) because waves at angles $\theta$ and $\theta + 180^\circ$ create identical spatial patterns—the FFT magnitude cannot distinguish propagation direction. Then this 180$^\circ$ ambiguity is resolved with plane wave fit in the time domain (testing both θ and θ+180°) and selecting the direction with larger amplitude. This approach is ~180× faster than time-domain only but requires evenly spaced time samples.
+where $A_m$ is the amplitude, $\theta_m$ is the propagation direction, and $\phi_m$ is the spatial phase. The method performs 360 spatial fits (one per degree) to identify propagation directions. However, because the FFT has collapsed the time dimension, this produces two-lobe polar plots (insert figure) because waves at angles $\theta$ and $\theta + 180^\circ$ create identical spatial patterns—the FFT magnitude cannot distinguish propagation direction. Then this 180$^\circ$ ambiguity is resolved with plane wave fit in the time domain (testing both θ and θ+180°) and selecting the direction with larger amplitude. This approach is ~180× faster than time-domain only but requires evenly spaced time samples. \autoref{fig:figure2}. 
+
+![Frequency-domain plane wave fit applied to LLC4320 model SSHA in the Tasman Sea. Top left: SSHA. Remaining panels: Directional amplitude scans for the three dominant wave components. The polar plots show fitted amplitude (m) as a function of propagation direction. Two-lobe patterns result from 180° directional ambiguity in the spatial FFT. Arrows indicate final propagation directions after time-domain disambiguation.](figures/figure2.png){#fig:figure2}
 
 
 ```python
