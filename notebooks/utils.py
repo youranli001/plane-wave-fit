@@ -275,5 +275,234 @@ def fit_wave(data_3D, k, omega, X_3D, Y_3D, T_3D, display_process = False):
 
 
 
-
+def fit_wave_frequency_domain(data_3D, k, omega, X_2D, Y_2D, T_1D, f=None, display_process=False):
+    """
+    Fit a single wave model using frequency-domain approach for faster computation.
+    
+    Parameters:
+    -----------
+    data_3D : ndarray, shape (nx, ny, nt)
+        Sea surface height anomaly data
+    k : float
+        Horizontal wavenumber [rad/km]
+    omega : float
+        Angular frequency [rad/day]
+    X_2D : ndarray, shape (nx, ny)
+        X coordinates [km]
+    Y_2D : ndarray, shape (nx, ny)
+        Y coordinates [km]
+    T_1D : ndarray, shape (nt,)
+        Time coordinates [days]
+    f : ndarray, optional
+        Frequency vector [cycles/day]. If None, will be computed.
+    display_process : bool
+        Whether to print progress
+    
+    Returns:
+    --------
+    Same as fit_wave() in time domain
+    """
+    
+    from scipy.stats import t
+    from numpy.linalg import lstsq, LinAlgError
+    import numpy as np
+    
+    radians_to_degrees = 180 / np.pi
+    degrees_to_radians = np.pi / 180
+    
+    nx, ny, nt = data_3D.shape
+    
+    # === STAGE 1: Frequency Domain Direction Finding ===
+    
+    # Perform FFT along time dimension
+    B_freq = np.fft.fft(data_3D, axis=2)
+    
+    # Compute frequency vector if not provided
+    if f is None:
+        fs = 1 / (T_1D[1] - T_1D[0])  # Sampling frequency [1/day]
+        f = np.fft.fftfreq(nt, d=1/fs)  # [cycles/day]
+    
+    # Extract M2 frequency component
+    M2_freq = omega / (2 * np.pi)  # Convert rad/day to cycles/day
+    M2_index = np.argmin(np.abs(f - M2_freq))
+    B_freq_M2 = B_freq[:, :, M2_index]  # Shape: (nx, ny)
+    B_freq_M2_vec = B_freq_M2.flatten()
+    
+    # Flatten spatial coordinates
+    XX = X_2D.flatten()
+    YY = Y_2D.flatten()
+    
+    # Remove NaN values
+    nonnan_mask = ~np.isnan(B_freq_M2_vec)
+    B_freq_M2_nonnan = B_freq_M2_vec[nonnan_mask]
+    XX_nonnan = XX[nonnan_mask]
+    YY_nonnan = YY[nonnan_mask]
+    
+    if len(B_freq_M2_nonnan) == 0:
+        print('All NaNs in frequency domain')
+        return None, None, None, None, None, None, None, None
+    
+    # Initialize arrays for directional scan
+    amplitudes_freq = np.zeros(360)
+    residual_variances_freq = np.zeros(360)
+    
+    # Directional scan in frequency domain (spatial only)
+    for angle in range(1, 361):
+        if display_process and angle % 30 == 0:
+            print(f'Frequency domain scan - angle: {angle}')
+        
+        theta = degrees_to_radians * angle
+        
+        # Construct spatial plane wave (no time dependence)
+        cos_term = np.cos(k * XX_nonnan * np.cos(theta) + k * YY_nonnan * np.sin(theta))
+        sin_term = np.sin(k * XX_nonnan * np.cos(theta) + k * YY_nonnan * np.sin(theta))
+        A_freq = np.vstack([cos_term, sin_term]).T
+        
+        # Least-squares fit (can handle complex data)
+        try:
+            beta, _, _, _ = lstsq(A_freq, B_freq_M2_nonnan, rcond=None)
+        except LinAlgError:
+            print(f"SVD did not converge at angle {angle}")
+            continue
+        
+        # Extract amplitude (use real part of beta for amplitude calculation)
+        amplitude = np.sqrt(np.real(beta[0])**2 + np.real(beta[1])**2)
+        amplitudes_freq[angle - 1] = amplitude
+        
+        # Calculate residual variance
+        predicted_wave_freq = A_freq.dot(beta)
+        residuals_freq = B_freq_M2_nonnan - predicted_wave_freq
+        residual_variances_freq[angle - 1] = np.var(residuals_freq)
+    
+    # Find direction with maximum amplitude
+    max_amplitude_freq = amplitudes_freq.max()
+    max_angle_freq = amplitudes_freq.argmax() + 1
+    
+    if display_process:
+        print(f'Frequency domain best angle: {max_angle_freq}°, amplitude: {max_amplitude_freq:.4f}')
+    
+    # === STAGE 2: Time Domain Refinement ===
+    
+    # Create 3D coordinates
+    X_3D = np.repeat(X_2D[:, :, np.newaxis], nt, axis=2)
+    Y_3D = np.repeat(Y_2D[:, :, np.newaxis], nt, axis=2)
+    T_3D = np.repeat(T_1D[np.newaxis, np.newaxis, :], nx, axis=0)
+    T_3D = np.repeat(T_3D, ny, axis=1)
+    
+    # Flatten for regression
+    B_vec = data_3D.flatten()
+    X_vec = X_3D.flatten()
+    Y_vec = Y_3D.flatten()
+    T_vec = T_3D.flatten()
+    
+    # Remove NaN values
+    nonnan_mask_3D = ~np.isnan(B_vec)
+    B_vec_nonnan = B_vec[nonnan_mask_3D]
+    X_vec_nonnan = X_vec[nonnan_mask_3D]
+    Y_vec_nonnan = Y_vec[nonnan_mask_3D]
+    T_vec_nonnan = T_vec[nonnan_mask_3D]
+    
+    # Test both the best direction and its opposite (180° away)
+    theta1 = degrees_to_radians * max_angle_freq
+    theta2 = (theta1 + np.pi) % (2 * np.pi)
+    
+    results = []
+    for i, theta in enumerate([theta1, theta2]):
+        # Construct time-domain plane wave
+        cos_term = np.cos(k * X_vec_nonnan * np.cos(theta) + 
+                          k * Y_vec_nonnan * np.sin(theta) - 
+                          omega * T_vec_nonnan)
+        sin_term = np.sin(k * X_vec_nonnan * np.cos(theta) + 
+                          k * Y_vec_nonnan * np.sin(theta) - 
+                          omega * T_vec_nonnan)
+        A_vec_nonnan = np.vstack([cos_term, sin_term]).T
+        
+        # Perform regression
+        try:
+            beta, _, _, _ = lstsq(A_vec_nonnan, B_vec_nonnan, rcond=None)
+        except LinAlgError:
+            print(f"SVD did not converge for direction {i+1}")
+            continue
+        
+        # Calculate amplitude and phase
+        amplitude = np.sqrt(beta[0]**2 + beta[1]**2)
+        phase = np.arctan2(beta[1], beta[0])
+        
+        results.append({
+            'amplitude': amplitude,
+            'phase': phase,
+            'beta': beta,
+            'theta': theta,
+            'angle_deg': max_angle_freq if i == 0 else (max_angle_freq + 180) % 360,
+            'A_vec_nonnan': A_vec_nonnan
+        })
+    
+    # Select the direction with larger amplitude
+    if results[0]['amplitude'] > results[1]['amplitude']:
+        best_result = results[0]
+    else:
+        best_result = results[1]
+    
+    max_amplitude = best_result['amplitude']
+    max_angle = best_result['angle_deg']
+    phase = best_result['phase']
+    beta = best_result['beta']
+    A_vec_nonnan = best_result['A_vec_nonnan']
+    
+    if display_process:
+        print(f'Time domain refinement - angle: {max_angle}°, amplitude: {max_amplitude:.4f}')
+    
+    # Reconstruct full predicted wave (including NaN positions)
+    theta_best = best_result['theta']
+    cos_term = np.cos(k * X_vec * np.cos(theta_best) + 
+                      k * Y_vec * np.sin(theta_best) - 
+                      omega * T_vec)
+    sin_term = np.sin(k * X_vec * np.cos(theta_best) + 
+                      k * Y_vec * np.sin(theta_best) - 
+                      omega * T_vec)
+    A_vec = np.vstack([cos_term, sin_term]).T
+    best_predicted_wave = A_vec.dot(beta)
+    best_predicted_wave = best_predicted_wave.reshape(data_3D.shape)
+    
+    # === Calculate Uncertainty Estimates ===
+    
+    residuals = B_vec_nonnan - A_vec_nonnan.dot(beta)
+    df = len(B_vec_nonnan) - 2
+    residual_variance = np.sum(residuals**2) / df
+    
+    # Covariance matrix
+    A_transpose_A_inv = np.linalg.inv(A_vec_nonnan.T.dot(A_vec_nonnan))
+    cov_matrix_beta = residual_variance * A_transpose_A_inv
+    standard_errors_beta = np.sqrt(np.diag(cov_matrix_beta))
+    
+    # t-distribution critical value
+    confidence_level = 0.95
+    alpha = 1 - confidence_level
+    t_critical = t.ppf(1 - alpha/2, df)
+    
+    # Standard errors for amplitude and phase
+    standard_error_amplitude = np.sqrt(
+        (beta[0] * standard_errors_beta[0])**2 + 
+        (beta[1] * standard_errors_beta[1])**2
+    ) / max_amplitude
+    
+    standard_error_phase = np.sqrt(
+        (beta[1] * standard_errors_beta[0])**2 + 
+        (beta[0] * standard_errors_beta[1])**2
+    ) / (beta[0]**2 + beta[1]**2)
+    
+    uncertainty_estimates = {
+        'dof': df,
+        't_critical': t_critical,
+        'beta': beta,
+        'standard_errors_beta': standard_errors_beta,
+        'standard_error_amplitude': standard_error_amplitude,
+        'standard_error_phase': standard_error_phase,
+        'cov_matrix_beta': cov_matrix_beta
+    }
+    
+    # Return in same format as time-domain version
+    # Note: returning frequency-domain amplitudes and residual variances
+    return (max_amplitude, max_angle, phase, best_predicted_wave, 
+            residual_variances_freq, amplitudes_freq, None, uncertainty_estimates)
 
