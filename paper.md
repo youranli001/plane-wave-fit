@@ -25,12 +25,12 @@ bibliography: paper.bib
 
 Internal tides are internal gravity waves generated when tidal flows interact with seafloor topography. These waves transport energy across ocean basins and drive mixing that affects global ocean circulation and climate. In this paper, we introduce PlaneWaveFit, an open-source software package with a Python interface that extracts the amplitude, phase, and propagation direction of internal tides from Sea Surface Height (SSH) observations, with uncertainty estimates for both amplitude and phase provided \autoref{fig:example}. 
 
-<!--
+
 The software implements two complementary plane-wave fitting approaches: a time-domain method applicable to any spatiotemporal dataset (including irregularly-sampled satellite missions such as SWOT), and a frequency-domain method optimized for evenly-sampled, high-temporal-resolution datasets (e.g., hourly numerical model outputs). Both methods resolve multiple wave components. It also provides built-in access to precomputed internal tide parameters derived from the climatology in the World Ocean Atlas dataset. These parameters specifically target the dominant mode-1 $M_2$ internal tide and include the necessary conversion ratios to calculate depth-integrated energy and energy flux directly from the fitted surface amplitudes.
--->
 
+<!--
 The software implements a two-dimensional plane-wave fitting approach to resolve multiple wave components. It is broadly applicable to data from satellite missions, such as the Surface Water and Ocean Topography (SWOT) mission, numerical ocean model outputs, and synthetic datasets. It also provides built-in access to precomputed internal tide parameters derived from the climatology in the World Ocean Atlas dataset. These parameters specifically target the dominant mode-1 $M_2$ internal tide and include the necessary conversion ratios to calculate depth-integrated energy and energy flux directly from the fitted surface amplitudes.
-
+-->
 ![Example of plane wave fit performed. Top left: Sea surface height anomalies (SSHA) from the SWOT satellite on April 2 2023. Remaining panels: Results of the iterative plane-wave fitting algorithm. The polar plots show the fitted amplitude (mm) as a function of propagation direction for the three most energetic wave components identified. Each panel includes a summary of the extracted wave parameters—maximum amplitude, propagation angle, and phase.](figure.png){#fig:example}
 
 
