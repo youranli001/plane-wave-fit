@@ -25,6 +25,10 @@ bibliography: paper.bib
 
 Internal tides are internal gravity waves generated when tidal flows interact with seafloor topography. These waves transport energy across ocean basins and drive mixing that affects global ocean circulation and climate. In this paper, we introduce PlaneWaveFit, an open-source software package with a Python interface that extracts the amplitude, phase, and propagation direction of internal tides from Sea Surface Height (SSH) observations, with uncertainty estimates for both amplitude and phase provided \autoref{fig:example}. 
 
+<!--
+The software implements two complementary plane-wave fitting approaches: a time-domain method applicable to any spatiotemporal dataset (including irregularly-sampled satellite missions such as SWOT), and a frequency-domain method optimized for evenly-sampled, high-temporal-resolution datasets (e.g., hourly numerical model outputs). Both methods resolve multiple wave components. It also provides built-in access to precomputed internal tide parameters derived from the climatology in the World Ocean Atlas dataset. These parameters specifically target the dominant mode-1 $M_2$ internal tide and include the necessary conversion ratios to calculate depth-integrated energy and energy flux directly from the fitted surface amplitudes.
+-->
+
 The software implements a two-dimensional plane-wave fitting approach to resolve multiple wave components. It is broadly applicable to data from satellite missions, such as the Surface Water and Ocean Topography (SWOT) mission, numerical ocean model outputs, and synthetic datasets. It also provides built-in access to precomputed internal tide parameters derived from the climatology in the World Ocean Atlas dataset. These parameters specifically target the dominant mode-1 $M_2$ internal tide and include the necessary conversion ratios to calculate depth-integrated energy and energy flux directly from the fitted surface amplitudes.
 
 ![Example of plane wave fit performed. Top left: Sea surface height anomalies (SSHA) from the SWOT satellite on April 2 2023. Remaining panels: Results of the iterative plane-wave fitting algorithm. The polar plots show the fitted amplitude (mm) as a function of propagation direction for the three most energetic wave components identified. Each panel includes a summary of the extracted wave parameters—maximum amplitude, propagation angle, and phase.](figure.png){#fig:example}
@@ -66,11 +70,14 @@ Internal tide parameters (amplitude $A$, phase $\phi$, and direction $\theta$) a
 
 $$\eta(x, y, t) = \sum_{m=1}^{N} A_m \cos(k_{x,m} x + k_{y,m} y - \omega t - \phi_m)$$
 
-The optimal propagation direction $\theta$ is determined using a directional scanning approach. The algorithm evaluates all compass directions from $1^\circ$ to $360^\circ$; at each angle, a linear least-squares problem is solved to estimate the sine and cosine coefficients $(\beta_1, \beta_2)$. The direction associated with the maximum fitted amplitude is selected as the dominant propagation direction for the wave component under consideration.
+### Time-Domain Method
+The optimal propagation direction $\theta$ is determined using a directional scanning approach. The algorithm evaluates all compass directions from $1^\circ$ to $360^\circ$; at each angle, a linear least-squares problem is solved. The direction associated with the maximum fitted amplitude is selected as the dominant propagation direction for the wave component under consideration. Parameter uncertainties are estimated from the covariance matrix of the least-squares solution, derived from the residual variance of the fitted model. This method is applicable to any spatiotemporal dataset, including irregularly sampled observations.
 
+<!--
 Following the selection of the optimal propagation direction, parameter uncertainties are estimated from the covariance matrix of the least-squares solution. The covariance is derived from the residual variance of the fitted model.
+-->
 
-### Usage Examples
+#### Usage Examples
 
 
 The following example illustrates the use of fit_wave functionality to extract wave amplitude, phase, and direction from SWOT data. Note that the ssh data is archived in zenodo, and will be downloaded to a `data/` directory within your current working folder.
@@ -129,11 +136,36 @@ amp2, theta2, phi2, model2, var2, _, _, uncert2 = utils.fit_wave(
     ssha - model1, k, omega, X_3D, Y_3D, T_3D
 )
 
-# Iteration 3: Subtract second wave and fit residuals
-amp3, theta3, phi3, model3, var3, _, _, uncert3 = utils.fit_wave(
-    ssha - model1 - model2, k, omega, X_3D, Y_3D, T_3D
-)
+```
+### Frequency-Domain Method
 
+For evenly-sampled datasets (e.g., hourly model output), the frequency-domain method achieves ~180× computational speedup using a two-stage hybrid approach. First a temporal Fast Fourier Transform (FFT) is applied to extract the M$_2$ tidal component, reducing the 3D spatiotemporal problem to a 2D spatial problem. The complex-valued spatial field at the M$_2$ frequency is then modeled as:
+
+$$
+B_{M_2}(x, y)
+=
+\sum_{m=1}^{N}
+A_m \cos\!\left(
+k\,x\cos\theta_m
++
+k\,y\sin\theta_m
++ \phi_m
+\right)
+$$
+
+where $A_m$ is the amplitude, $\theta_m$ is the propagation direction, and $\phi_m$ is the spatial phase. The method performs 360 spatial fits (one per degree) to identify propagation directions. However, because the FFT has collapsed the time dimension, this produces two-lobe polar plots (insert figure) because waves at angles $\theta$ and $\theta + 180^\circ$ create identical spatial patterns—the FFT magnitude cannot distinguish propagation direction. Then this 180$^\circ$ ambiguity is resolved with plane wave fit in the time domain (testing both θ and θ+180°) and selecting the direction with larger amplitude. This approach is ~180× faster than time-domain only but requires evenly spaced time samples.
+
+
+```python
+# Frequency-domain requires 2D spatial grids + 1D time
+X_2D = ds['distX'].values  # Shape: (nx, ny)
+Y_2D = ds['distY'].values  # Shape: (nx, ny)
+t = time - time[0]  # shape : (nt) # days
+
+# plane wave fit
+amp1, theta1, phase1, model1, var1, amps1, _, uncert1 = utils.fit_wave_frequency_domain(
+    ssha, k, omega, X_2D, Y_2D, t
+)
 ```
 
 
