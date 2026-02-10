@@ -325,7 +325,10 @@ def fit_wave_frequency_domain(data_3D, k, omega, X_2D, Y_2D, T_1D, f=None, displ
     # Extract M2 frequency component
     M2_freq = omega / (2 * np.pi)  # Convert rad/day to cycles/day
     M2_index = np.argmin(np.abs(f - M2_freq))
-    B_freq_M2 = B_freq[:, :, M2_index]  # Shape: (nx, ny)
+    # Normalize by nt/2 so that for a signal A*cos(omega*t + phi),
+    # the FFT coefficient at the M2 index recovers amplitude A.
+    # Without this, |B_freq_M2| ~ (nt/2) * A (unnormalized spectral strength).
+    B_freq_M2 = B_freq[:, :, M2_index] / (nt / 2)  # Shape: (nx, ny)
     B_freq_M2_vec = B_freq_M2.flatten()
     
     # Flatten spatial coordinates
