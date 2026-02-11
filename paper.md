@@ -75,7 +75,7 @@ where $\omega$ is the M$_2$ angular frequency and $k$ is the horizontal wavenumb
 
 For each compass direction (angular increment 1°), least-squares fitting determines the amplitude and phase of a plane wave. When plotted in polar coordinates, a wave component appears as a lobe; the largest lobe gives the amplitude and direction of the dominant wave (\autoref{fig:example_timedomain}). That wave is then predicted and subtracted, and the procedure repeated to extract additional components. Amplitude and phase uncertainties derive from the least-squares covariance matrix. Details of the fitting procedure and uncertainty derivation are provided in @li2026.
 
-![Plane wave fit applied to SWOT SSHA data. Top left: SWOT SSHA near 35°W, 35.5°S on April 2, 2023. Remaining panels: polar plots showing fitted amplitude (mm) versus propagation direction for the three most energetic wave components; arrows indicate the selected propagation direction.](figure1.png){#fig:example_timedomain}
+![Plane wave fit applied to SWOT SSHA data. Top left: SWOT SSHA near 35°W, 35.5°S on April 2, 2023. Remaining panels: polar plots showing fitted amplitude (mm) versus propagation direction for the three most energetic wave components; arrows indicate the selected propagation direction.](figures/figure1.png){#fig:example_timedomain}
 
 **Example: SWOT data**
 ```python
@@ -117,10 +117,11 @@ For evenly-sampled data, the frequency-domain method uses a two-step hybrid appr
 
 $$B_{M_2}(x, y) = \sum_{m=1}^{N} A_m \cos(k x \cos\theta_m + k y \sin\theta_m + \phi_m)$$
 
-We perform 360 directional scans (1°–360°), fitting this spatial pattern at each angle. Because waves at angles $\theta$ and $\theta + 180°$ produce the same complex spatial field $B_{M_2}(x, y)$, the fitting yields identical amplitudes for both directions, creating symmetric two-lobe polar plots. Step 2 resolves this 180° ambiguity by performing full time-domain fits at both candidate directions and selecting the one with larger amplitude.
+We perform 360 directional scans (1°–360°), fitting this spatial pattern at each angle. Because waves at angles $\theta$ and $\theta + 180°$ produce the same complex spatial field $B_{M_2}(x, y)$, the fitting yields identical amplitudes for both directions, creating symmetric two-lobe polar plots (\autoref{fig:example_frequency_domain}). Step 2 resolves this 180° ambiguity by performing full time-domain fits at both candidate directions and selecting the one with larger amplitude.
 
 This approach achieves substantial speedup by collapsing the time dimension via FFT: instead of fitting 360 directions to 3D spatiotemporal data $(n_t \times n_x \times n_y)$ , we fit 360 directions to 2D spatial data $(n_x \times n_y)$ plus 2 time-domain fits for disambiguation. The method requires evenly-spaced time samples but handles irregular spatial sampling.
 
+![Plane wave fit applied to SWOT SSHA data. Top left: SWOT SSHA near 35°W, 35.5°S on April 2, 2023. Remaining panels: polar plots showing fitted amplitude (mm) versus propagation direction for the three most energetic wave components; arrows indicate the selected propagation direction.](figures/figure2.png){#fig:example_frequency_domain}
 
 **Example: LLC4320 model output**
 ```python
