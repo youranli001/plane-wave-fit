@@ -137,7 +137,7 @@ amp1, theta1, phi1, model1, var1, amps1, _, uncert1 = utils.fit_wave_frequency_d
 
 ## 3. Example Notebooks
 
-The fitting algorithms are implemented in `utils.py`, which provides the core functions `fit_wave()` (time-domain method) and `fit_wave_frequency_domain()` (frequency-domain method), along with coordinate conversion and uncertainty quantification utilities.
+The fitting algorithms are implemented in `utils.py`, which provides the core functions `fit_wave()` (time-domain method) and `fit_wave_frequency_domain()` (frequency-domain method), along with coordinate conversion.
 
 The repository includes four Jupyter notebooks demonstrating usage:
 
