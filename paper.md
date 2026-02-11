@@ -12,12 +12,12 @@ authors:
     orcid: 0000-0001-9144-4368
     affiliation: 1    
   - name: Matthew Mazloff
-    orcid: 0000-0002-1650-1850
+    orcid: 0000-0002-1650-5850
     affiliation: 1 
 affiliations:
   - name: Scripps Institution of Oceanography, University of California San Diego, USA
     index: 1
-date: 4 February 2026
+date: 14 February 2026
 bibliography: paper.bib
 ---
 
@@ -113,13 +113,13 @@ amp2, theta2, phi2, model2, var2, _, _, uncert2 = utils.fit_wave(
 
 ### Frequency-Domain Method
 
-For evenly-sampled data, the frequency-domain method uses a two-stage hybrid approach. **Step 1** applies temporal FFT to extract the M$_2$ component, reducing the 3D spatiotemporal problem to 2D spatial fitting. The complex spatial field is:
+For evenly-sampled data, the frequency-domain method uses a two-step hybrid approach. Step 1 applies temporal FFT to extract the M$_2$ component, reducing the 3D spatiotemporal problem to 2D spatial fitting. The complex spatial field is:
 
 $$B_{M_2}(x, y) = \sum_{m=1}^{N} A_m \cos(k x \cos\theta_m + k y \sin\theta_m + \phi_m)$$
 
-We perform 360 directional scans (1°–360°), fitting this spatial pattern at each angle. Because waves at angles $\theta$ and $\theta + 180°$ create identical spatial patterns, the FFT magnitude cannot distinguish propagation direction, producing two-lobe polar plots. **Step 2** resolves this 180° ambiguity by testing both candidate directions in the time domain and selecting the direction with larger amplitude.
+We perform 360 directional scans (1°–360°), fitting this spatial pattern at each angle. Because waves at angles $\theta$ and $\theta + 180°$ create identical spatial patterns, the FFT magnitude cannot distinguish propagation direction, producing two-lobe polar plots. Step 2 resolves this 180° ambiguity by testing both candidate directions in the time domain and selecting the direction with larger amplitude.
 
-This two-stage approach achieves ~180× speedup compared to time-domain alone. The speedup comes from collapsing the time dimension via FFT: instead of 360 time-domain fits (each fitting x, y, t data), we perform 360 fast spatial fits (x, y data only) plus 2 time-domain fits. Tested on hourly LLC4320 model output spanning 90 days, runtime reduced from ~6 hours to ~2 minutes on a standard workstation. This method requires evenly-spaced time samples but can handle irregular spatial sampling.
+This two-step approach achieves ~180× speedup compared to time-domain alone. The speedup comes from collapsing the time dimension via FFT: instead of 360 time-domain fits (each fitting x, y, t data), we perform 360 fast spatial fits (x, y data only) plus 2 time-domain fits. Tested on hourly LLC4320 model output spanning 90 days, runtime reduced from ~6 hours to ~2 minutes on a standard workstation. This method requires evenly-spaced time samples but can handle irregular spatial sampling.
 
 
 **Example: LLC4320 model output**
@@ -138,8 +138,26 @@ amp1, theta1, phi1, model1, var1, amps1, _, uncert1 = utils.fit_wave_frequency_d
 
 PlaneWaveFit provides a modular, open-source implementation for extracting internal tides from SSH data. Applied to SWOT observations in the Southern Ocean [@li2026], the software successfully extracted coherent tidal beams and refraction patterns despite strong mesoscale variability. The technique has been used to map internal tides globally using multi-satellite altimetry [@zhao2016global; @zaron2019baroclinic; @zhao2024internal]. By combining fitted amplitudes with the precomputed database, researchers can estimate depth-integrated energy and flux directly from satellite observations, advancing understanding of tidal dissipation and mixing.
 
+<!--
 # Future directions
 
+The current implementation quantifies amplitude and phase uncertainties from the least-squares covariance matrix, but does not provide a formal uncertainty estimate for propagation direction. Direction is determined by a discrete 1° scan and selected at the angle of maximum amplitude — a procedure that does not naturally yield a covariance-based standard error.
+
+A practical proxy for directional sharpness is the angular half-power width of the amplitude peak in the polar scan: a narrow peak indicates a well-constrained direction, while a broad peak indicates that many directions fit the data nearly equally well. This quantity requires no additional computation and could be added as a default output alongside the existing amplitude and phase uncertainties.
+
+A statistically rigorous confidence interval for propagation direction could be obtained through bootstrap resampling over observational cycles. By repeatedly subsampling the available observations and refitting, the spread of direction estimates across replicates provides a formal uncertainty measure that accounts for all sources of variability, including mesoscale contamination. This approach is computationally expensive for global applications but feasible at individual locations.
+
+-->
+
+
+# Future Directions
+
+The current implementation provides amplitude and phase uncertainties from the least-squares covariance matrix, but propagation direction — determined by a discrete 1° scan — does not have a corresponding formal uncertainty estimate. The angular width of the amplitude peak in the polar scan could be used to characterize directional uncertainty, where a narrow peak indicates a well-constrained propagation direction and a broad peak indicates a larger uncertainty in propagation direction. Bootstrap 
+resampling over observational cycles could also be used to obtain a more rigorous confidence interval that accounts for all sources of variability, including mesoscale contamination.
+
+# AI usage disclosure
+
+No generative AI tools were used in the development of this software, the writing of this manuscript, or the preparation of supporting materials.
 
 # Acknowledgements
 
