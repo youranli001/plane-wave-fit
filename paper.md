@@ -124,9 +124,11 @@ We perform 360 directional scans (1°–360°), fitting this spatial pattern at 
 
 This approach achieves substantial speedup by collapsing the time dimension via FFT: instead of fitting 360 directions to 3D spatiotemporal data $(n_t \times n_x \times n_y)$ , we fit 360 directions to 2D spatial data $(n_x \times n_y)$ plus 2 time-domain fits for disambiguation. The method requires evenly-spaced time samples but handles irregular spatial sampling.
 
+The following example demonstrates the frequency-domain method applied to MITgcm LLC4320 model output at 155°E, 45°S in the Tasman Sea, a region of energetic internal tides radiating northwest from the Macquarie Ridge. The SSHA data (hourly output spanning 40 days, May 29 - July 8, 2012) have been preprocessed with a 24-hour temporal high-pass filter to remove mesoscale eddies and a 500 km spatial high-pass filter to remove barotropic tides. The example dataset is included in the repository.
+
+
 ![Frequency-domain plane wave fit applied to MITgcm LLC4320 SSHA data in the Tasman Sea. Top left: Preprocessed SSHA snapshot at 155°E, 45°S on June 2, 2012. Remaining panels: polar plots showing fitted amplitude (mm) versus propagation direction for the three most energetic wave components; arrows indicate the selected propagation direction. Note the symmetric two-lobe patterns characteristic of frequency-domain directional scans.](figures/figure2.png){#fig:example_frequency_domain}
 
-The following example demonstrates the frequency-domain method applied to MITgcm LLC4320 model output at 155°E, 45°S in the Tasman Sea, a region of energetic internal tides radiating northwest from the Macquarie Ridge. The SSHA data (hourly output spanning 40 days, May 29 - July 8, 2012) have been preprocessed with a 24-hour temporal high-pass filter to remove mesoscale eddies and a 500 km spatial high-pass filter to remove barotropic tides. The example dataset is included in the repository.
 
 
 **Example: LLC4320 model output**
@@ -147,10 +149,10 @@ The fitting algorithms are implemented in `utils.py`, which provides the core fu
 
 The repository includes four Jupyter notebooks demonstrating usage:
 
-1. `01_time_domain_fitting.ipynb`: It tests the time-domain method on synthetic data containing three internal tides, white noise, and correlated eddy fields with varying amplitudes.
-2. `02_frequency_domain_fitting.ipynb`: It tests the time-domain method on irregularly-sampled SWOT satellite observations in the South Atlantic.  
-3. `03_access_internal_tide_parameters.ipynb`: It demonstrates programmatic access to the Zenodo-archived internal tide parameter database and visualization.
-4. `04_llc4320_plane_wave_fit_frequency_domain.ipynb`:  It tests and compares time-domain and frequency-domain methods on MITgcm LLC4320 model SSH outputs in the Tasman Sea.
+1. `01_time_domain_fitting.ipynb`: Demonstrates the time-domain method on synthetic data containing three internal tides, white noise, and correlated eddy fields with varying amplitudes.
+2. `02_frequency_domain_fitting.ipynb`: Demonstrates the time-domain method on irregularly-sampled SWOT satellite observations in the South Atlantic.  
+3. `03_access_internal_tide_parameters.ipynb`: Demonstrates programmatic access to the Zenodo-archived internal tide parameter database and visualization.
+4. `04_llc4320_plane_wave_fit_frequency_domain.ipynb`:  Demonstrates the frequency-domain method and compares it to the time-domain method using MITgcm LLC4320 model SSH outputs in the Tasman Sea.
 
 
 # Research impact
