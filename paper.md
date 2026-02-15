@@ -23,7 +23,7 @@ bibliography: paper.bib
 
 # Summary
 
-PlaneWaveFit extracts amplitude, phase, and propagation direction of internal tides from sea surface height (SSH) observations, with quantified uncertainties. The package implements two complementary plane-wave fitting approaches: (1) a time-domain method applicable to any spatiotemporal dataset, including irregularly-sampled observations, and (2) a frequency-domain method for evenly-sampled data (e.g., hourly model output). Both resolve multiple wave components and provide uncertainty estimates. The package also provides programmatic access to a companion Zenodo dataset of precomputed mode-1 M$_2$​ internal tide parameters on a global 0.25° grid, enabling direct conversion from fitted surface amplitudes to depth-integrated energy and flux without requiring local stratification data. A detailed mathematical derivation of the fitting methods and uncertainty quantification is provided in [@li2026].
+PlaneWaveFit extracts amplitude, phase, and propagation direction of internal tides from sea surface height (SSH) observations, with quantified uncertainties. The package implements two complementary plane-wave fitting approaches: (1) a time-domain method applicable to any spatiotemporal dataset, including irregularly-sampled observations, and (2) a frequency-domain method for evenly-sampled data (e.g., hourly model output). Both resolve multiple wave components and provide uncertainty estimates. The package also interfaces with a companion Zenodo dataset of precomputed mode-1 M$_2$​ internal tide parameters on a global 0.25° grid, enabling direct conversion from fitted surface amplitudes to depth-integrated energy and flux without requiring local stratification data. A detailed mathematical derivation of the fitting methods and uncertainty quantification is provided in [@li2026].
 
 # Statement of need
 
@@ -33,20 +33,21 @@ Extracting internal tides from SSH observations requires separating a baroclinic
 
 Two-dimensional plane-wave fitting has proven effective for extracting internal tides from SSH data [@zhao2011internal; @zhao2016global; @zhao2017global; @zaron2019baroclinic; @zhao2024internal], but documented, open-source implementations with uncertainty quantification have been lacking. PlaneWaveFit addresses this gap.
 
-Internal tides can be represented as a superposition of vertical modes, each with a fixed vertical structure and characteristic horizontal wavelength. Low-mode internal tides propagate thousands of kilometers from generation sites, while higher modes dissipate locally. The package complements vertical mode solvers like dynmodes [@klinck_dynmodes], which compute vertical mode structures from a stratification profile. PlaneWaveFit uses those outputs to compute additional internal tide parameters (following Appendix A of @li2026), including wavelengths, phase and group speeds, and conversion ratios linking SSH amplitude to depth-integrated energy and flux. These are precomputed globally from WOA23 climatology and archived in a Zenodo dataset [@li2025internal].
+Internal tides can be represented as a superposition of vertical modes, each with a fixed vertical structure and characteristic horizontal wavelength. Low-mode internal tides propagate thousands of kilometers from generation sites, while higher modes dissipate locally. The package complements vertical mode solvers like dynmodes [@klinck_dynmodes], which compute vertical mode structures from a stratification profile. PlaneWaveFit uses those outputs to compute additional internal tide parameters (following Appendix A of @li2026), including wavelengths, phase and group speeds, and conversion ratios linking SSH amplitude to depth-integrated energy and flux. These conversion ratios are precomputed globally from WOA23 climatology and archived in a Zenodo dataset [@li2025internal].
 
 # Software design
 
 ## 1. Internal Tide Parameter Database
 
-Programmatic access to a Zenodo-archived dataset [@li2025internal] containing M$_2$ internal tide parameters (modes 1-10, global 0.25° grid):
-- Vertical mode structures of pressure, horizontal velocity, vertical velocity, and vertical displacement
-- Wave properties: phase speeds, group speeds, and wavelengths
-- Conversion ratios relating SSH amplitude to:
-  - Maximum vertical isopycnal displacement
-  - Depth-integrated potential, kinetic, and total energy density
-  - Depth-integrated horizontal energy flux
+The package provides access to a Zenodo-archived dataset [@li2025internal] containing M2 internal tide parameters (modes 1-10, global 0.25° grid):
 
+1. Vertical mode structures of pressure, horizontal velocity, vertical velocity, and vertical displacement
+2. Wave properties: phase speeds, group speeds, and wavelengths
+3. Conversion ratios relating SSH amplitude to:
+   a. Maximum vertical isopycnal displacement
+   b. Depth-integrated potential, kinetic, and total energy density
+   c. Depth-integrated horizontal energy flux
+   
 The physical derivation of these conversion ratios is detailed in @li2026, Appendix A. Example: a 4.12 mm fitted surface amplitude at 35°W, 35.5°S corresponds to a depth-integrated horizontal energy flux of 0.35 kW/m using the precomputed conversion ratio at that location. Users with local stratification profiles can compute these directly following Appendix A of @li2026; those working with SSH observations alone can use the precomputed database.
 
 ## 2. Plane-Wave Fitting Algorithm
@@ -69,11 +70,13 @@ k\,y\sin\theta_m
 \right)
 $$
 
-where $\omega$ is the M$_2$ angular frequency and $k$ is the horizontal wavenumber (provided by the user or obtained from the precomputed database). N is the number of fitted wave components.
+where $\omega$ can be any tidal angular frequency of interest, and $k$ is the horizontal wavenumber (provided by the user or obtained from the precomputed database). N is the number of fitted wave components.
 
 ### Time-Domain Method
 
-For each compass direction (angular increment 1°), least-squares fitting determines the amplitude and phase of a plane wave. When plotted in polar coordinates, a wave component appears as a lobe; the largest lobe gives the amplitude and direction of the dominant wave (\autoref{fig:example_timedomain}). That wave is then predicted and subtracted, and the procedure repeated to extract additional components. Amplitude and phase uncertainties derive from the least-squares covariance matrix. Details of the fitting procedure and uncertainty derivation are provided in @li2026.
+For each compass direction (angular increment 1°), least-squares fitting determines the amplitude and phase of a plane wave. When plotted in polar coordinates, a wave component appears as a lobe; the largest lobe gives the amplitude and direction of the dominant wave (\autoref{fig:example_timedomain}). That wave is then predicted and subtracted from the SSH anomaly (SSHA) data, and the procedure repeated to extract additional components. Amplitude and phase uncertainties derive from the least-squares covariance matrix. Details of the fitting procedure and uncertainty derivation are provided in @li2026.
+
+The following example demonstrates the method applied to SWOT observations at 35°W, 35.5°S during the calibration/validation phase. The SSHA data have been preprocessed to remove mesoscale variability by subtracting gridded sea level anomalies from multi-mission satellite altimetry.
 
 ![Plane wave fit applied to SWOT SSHA data. Top left: SWOT SSHA near 35°W, 35.5°S on April 2, 2023. Remaining panels: polar plots showing fitted amplitude (mm) versus propagation direction for the three most energetic wave components; arrows indicate the selected propagation direction.](figures/figure1.png){#fig:example_timedomain}
 
@@ -113,7 +116,7 @@ amp2, theta2, phi2, model2, var2, _, _, uncert2 = utils.fit_wave(
 
 ### Frequency-Domain Method
 
-For evenly-sampled data, the frequency-domain method uses a two-step hybrid approach. Step 1 applies temporal FFT to extract the M$_2$ component, reducing the 3D spatiotemporal problem to 2D spatial fitting. The complex spatial field is:
+For evenly-sampled data, the frequency-domain method uses a two-step hybrid approach. Step 1 applies temporal FFT to extract the M2 component, reducing the 3D spatiotemporal problem to 2D spatial fitting. This also filters out signals at other frequencies (diurnal tides, mesoscale variability, high-frequency noise) that would otherwise act as noise in the time-domain fitting. The complex spatial field is:
 
 $$B_{M_2}(x, y) = \sum_{m=1}^{N} A_m \cos(k x \cos\theta_m + k y \sin\theta_m + \phi_m)$$
 
@@ -121,7 +124,10 @@ We perform 360 directional scans (1°–360°), fitting this spatial pattern at 
 
 This approach achieves substantial speedup by collapsing the time dimension via FFT: instead of fitting 360 directions to 3D spatiotemporal data $(n_t \times n_x \times n_y)$ , we fit 360 directions to 2D spatial data $(n_x \times n_y)$ plus 2 time-domain fits for disambiguation. The method requires evenly-spaced time samples but handles irregular spatial sampling.
 
-![Plane wave fit applied to SWOT SSHA data. Top left: SWOT SSHA near 35°W, 35.5°S on April 2, 2023. Remaining panels: polar plots showing fitted amplitude (mm) versus propagation direction for the three most energetic wave components; arrows indicate the selected propagation direction.](figures/figure2.png){#fig:example_frequency_domain}
+![Frequency-domain plane wave fit applied to MITgcm LLC4320 SSHA data in the Tasman Sea. Top left: Preprocessed SSHA snapshot at 155°E, 45°S on June 2, 2012. Remaining panels: polar plots showing fitted amplitude (mm) versus propagation direction for the three most energetic wave components; arrows indicate the selected propagation direction. Note the symmetric two-lobe patterns characteristic of frequency-domain directional scans.](figures/figure2.png){#fig:example_frequency_domain}
+
+The following example demonstrates the frequency-domain method applied to MITgcm LLC4320 model output at 155°E, 45°S in the Tasman Sea, a region of energetic internal tides radiating northwest from the Macquarie Ridge. The SSHA data (hourly output spanning 40 days, May 29 - July 8, 2012) have been preprocessed with a 24-hour temporal high-pass filter to remove mesoscale eddies and a 500 km spatial high-pass filter to remove barotropic tides. The example dataset is included in the repository.
+
 
 **Example: LLC4320 model output**
 ```python
@@ -156,6 +162,10 @@ PlaneWaveFit provides a modular, open-source implementation for extracting inter
 
 The current implementation provides amplitude and phase uncertainties from the least-squares covariance matrix, but propagation direction — determined by a discrete 1° scan — does not have a corresponding formal uncertainty estimate. The angular width of the amplitude peak in the polar scan could be used to characterize directional uncertainty, where a narrow peak indicates a well-constrained propagation direction and a broad peak indicates a larger uncertainty in propagation direction. Bootstrap 
 resampling over observational cycles could also be used to obtain a more rigorous confidence interval that accounts for all sources of variability, including mesoscale contamination.
+
+The current Zenodo dataset uses annual-mean stratification from WOA23 to compute internal tide parameters. Stratification exhibits seasonal variability, particularly in mid-latitudes. Future versions could provide seasonal parameter sets (e.g., winter, spring, summer, fall) to improve accuracy when analyzing data from specific seasons.
+
+The current approach treats all observations equally. A weighted least-squares implementation would allow users to downweight noisy observations or incorporate prior knowledge about expected wave characteristics. This could improve fits when observation error varies spatially (e.g., near satellite ground track gaps or energetic boundary currents) or when prior information about expected propagation directions is available (e.g., from known generation sites).
 
 # AI usage disclosure
 
