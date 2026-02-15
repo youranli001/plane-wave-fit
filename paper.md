@@ -76,7 +76,7 @@ where $\omega$ can be any tidal angular frequency of interest, and $k$ is the ho
 
 For each compass direction (angular increment 1°), least-squares fitting determines the amplitude and phase of a plane wave. When plotted in polar coordinates, a wave component appears as a lobe; the largest lobe gives the amplitude and direction of the dominant wave (\autoref{fig:example_timedomain}). That wave is then predicted and subtracted from the SSH anomaly (SSHA) data, and the procedure repeated to extract additional components. Amplitude and phase uncertainties derive from the least-squares covariance matrix. Details of the fitting procedure and uncertainty derivation are provided in @li2026.
 
-The following example demonstrates the method applied to SWOT observations at 35°W, 35.5°S during the calibration/validation phase. The SSHA data have been preprocessed to remove mesoscale variability by subtracting gridded sea level anomalies from multi-mission satellite altimetry.
+The following example demonstrates the method applied to surface water ocean topography (SWOT) satellite observations at 35°W, 35.5°S during the calibration/validation phase. The SSH anomaly (SSHA) data have been preprocessed to remove mesoscale variability by subtracting gridded sea level anomalies from multi-mission satellite altimetry.
 
 ![Plane wave fit applied to SWOT SSHA data. Top left: SWOT SSHA near 35°W, 35.5°S on April 2, 2023. Remaining panels: polar plots showing fitted amplitude (mm) versus propagation direction for the three most energetic wave components; arrows indicate the selected propagation direction.](figures/figure1.png){#fig:example_timedomain}
 
@@ -124,11 +124,9 @@ We perform 360 directional scans (1°–360°), fitting this spatial pattern at 
 
 This approach achieves substantial speedup by collapsing the time dimension via FFT: instead of fitting 360 directions to 3D spatiotemporal data $(n_t \times n_x \times n_y)$ , we fit 360 directions to 2D spatial data $(n_x \times n_y)$ plus 2 time-domain fits for disambiguation. The method requires evenly-spaced time samples but handles irregular spatial sampling.
 
-The following example demonstrates the frequency-domain method applied to MITgcm LLC4320 model output at 155°E, 45°S in the Tasman Sea, a region of energetic internal tides radiating northwest from the Macquarie Ridge. The SSHA data (hourly output spanning 40 days, May 29 - July 8, 2012) have been preprocessed with a 24-hour temporal high-pass filter to remove mesoscale eddies and a 500 km spatial high-pass filter to remove barotropic tides. The example dataset is included in the repository.
-
+The following example demonstrates the frequency-domain method applied to MITgcm LLC4320 model output at 155°E, 45°S in the Tasman Sea, a region of energetic internal tides radiating northwest from the Macquarie Ridge. The SSHA data (hourly output spanning 40 days, May 29 - July 8, 2012) have been preprocessed with a 24-hour temporal high-pass filter and a 500 km spatial high-pass filter. The example dataset is included in the repository. 
 
 ![Frequency-domain plane wave fit applied to MITgcm LLC4320 SSHA data in the Tasman Sea. Top left: Preprocessed SSHA snapshot at 155°E, 45°S on June 2, 2012. Remaining panels: polar plots showing fitted amplitude (mm) versus propagation direction for the three most energetic wave components; arrows indicate the selected propagation direction. Note the symmetric two-lobe patterns characteristic of frequency-domain directional scans.](figures/figure2.png){#fig:example_frequency_domain}
-
 
 
 **Example: LLC4320 model output**
