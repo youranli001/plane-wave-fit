@@ -8,10 +8,10 @@ authors:
   - name: Youran Li
     orcid: 0000-0002-4576-5213
     affiliation: 1
-  - name: Sarah Gille
+  - name: Sarah T. Gille
     orcid: 0000-0001-9144-4368
     affiliation: 1    
-  - name: Matthew Mazloff
+  - name: Matthew M. Mazloff
     orcid: 0000-0002-1650-5850
     affiliation: 1 
 affiliations:
@@ -27,19 +27,23 @@ PlaneWaveFit extracts amplitude, phase, and propagation direction of internal ti
 
 # Statement of need
 
-Extracting internal tides from SSH observations requires separating a baroclinic tidal signal of O(1 cm) from mesoscale variability of O(1 m). Widely-used packages like `UTide` [@codiga2011unified] and `T_TIDE` [@pawlowicz2002classical] perform temporal harmonic analysis at fixed locations but cannot resolve spatial propagation. PlaneWaveFit implements two-dimensional fitting that extracts M$_2$ internal tides coherent in both space and time. By extracting signals that are both spatially and temporally coherent, the method reduces sensitivity to mesoscale contamination, enabling robust detection of tidal beams in energetic regions. In synthetic tests, fitted amplitudes, phases, and propagation directions match the prescribed 1 cm values even with correlated eddy noise up to 20 cm RMS.
+Extracting internal tides from SSH observations requires separating a baroclinic tidal signal of O(1 cm) from mesoscale variability of O(1 m). Widely-used packages like `UTide` [@codiga2011unified] and `T_TIDE` [@pawlowicz2002classical] perform temporal harmonic analysis at fixed locations but do not solve for spatial propagation. PlaneWaveFit implements two-dimensional fitting that extracts M$_2$ internal tides that are coherent in both space and time. By extracting signals that are both spatially and temporally coherent, the method minimizes sensitivity to mesoscale contamination, enabling robust detection of tidal beams in energetic regions. In synthetic tests, fitted amplitudes, phases, and propagation directions match the prescribed 1 cm values even with correlated eddy noise up to 20 cm RMS.
 
 # State of the field
 
-Two-dimensional plane-wave fitting has proven effective for extracting internal tides from SSH data [@zhao2011internal; @zhao2016global; @zhao2017global; @zaron2019baroclinic; @zhao2024internal], but documented, open-source implementations with uncertainty quantification have been lacking. PlaneWaveFit addresses this gap.
+Two-dimensional plane-wave fitting has proven effective for extracting internal tides from SSH data [@zhao2011internal; @zhao2016global; @zhao2017global; @zaron2019baroclinic; @zhao2024internal], but documented, open-source implementations with uncertainty quantification have not been available. PlaneWaveFit addresses this gap.
 
-Internal tides can be represented as a superposition of vertical modes, each with a fixed vertical structure and characteristic horizontal wavelength. Low-mode internal tides propagate thousands of kilometers from generation sites, while higher modes dissipate locally. The package complements vertical mode solvers like dynmodes [@klinck_dynmodes], which compute vertical mode structures from a stratification profile. PlaneWaveFit uses those outputs to compute additional internal tide parameters (following Appendix A of @li2026), including wavelengths, phase and group speeds, and conversion ratios linking SSH amplitude to depth-integrated energy and flux. These conversion ratios are precomputed globally from WOA23 climatology and archived in a Zenodo dataset [@li2025internal].
+Internal tides can be represented as a superposition of vertical modes, each with a fixed vertical structure and characteristic horizontal wavelength. Low-mode internal tides propagate thousands of kilometers from generation sites, while higher modes dissipate locally. This package complements vertical mode solvers like dynmodes [@klinck_dynmodes], which compute vertical mode structures from a stratification profile. PlaneWaveFit uses those outputs to compute additional internal tide parameters (following Appendix A of @li2026), including wavelengths, phase and group speeds, and conversion ratios linking SSH amplitude to depth-integrated energy and flux. These conversion ratios are precomputed globally from WOA23 climatology and archived in a Zenodo dataset [@li2025internal].
 
 # Software design
 
 ## 1. Internal Tide Parameter Database
 
 The package provides access to a Zenodo-archived dataset [@li2025internal] containing M2 internal tide parameters (modes 1-10, global 0.25° grid):
+
+I would an introductory sentence---we usually don't assume that people read the section headings.  You could say, "The background information needed to compute internal tides is contained in a Zenodo-archived dataset (Li et al, 2026).  The dataset contains M2 internal tide paramters with the following features:  "
+
+Then you might list the features as bulleted items to make them easy for readers to decipher.
 
 1. Vertical mode structures of pressure, horizontal velocity, vertical velocity, and vertical displacement
 2. Wave properties: phase speeds, group speeds, and wavelengths
@@ -48,7 +52,7 @@ The package provides access to a Zenodo-archived dataset [@li2025internal] conta
    b. Depth-integrated potential, kinetic, and total energy density
    c. Depth-integrated horizontal energy flux
    
-The physical derivation of these conversion ratios is detailed in @li2026, Appendix A. Example: a 4.12 mm fitted surface amplitude at 35°W, 35.5°S corresponds to a depth-integrated horizontal energy flux of 0.35 kW/m using the precomputed conversion ratio at that location. Users with local stratification profiles can compute these directly following Appendix A of @li2026; those working with SSH observations alone can use the precomputed database.
+The physical derivation of these conversion ratios is detailed by @li2026, Appendix A. As an example, a 4.12 mm fitted surface amplitude at 35°W, 35.5°S corresponds to a depth-integrated horizontal energy flux of 0.35 kW/m using the precomputed conversion ratio. Users with local stratification profiles can compute these directly following Appendix A of @li2026; those working with SSH observations alone can use the precomputed database.
 
 ## 2. Plane-Wave Fitting Algorithm
 
@@ -70,7 +74,7 @@ k\,y\sin\theta_m
 \right)
 $$
 
-where $\omega$ can be any tidal angular frequency of interest, and $k$ is the horizontal wavenumber (provided by the user or obtained from the precomputed database). N is the number of fitted wave components.
+where $\omega$ can be any tidal angular frequency of interest, and $k$ is the horizontal wavenumber (provided by the user or obtained from the precomputed database). $N$ is the number of fitted wave components.
 
 ### Time-Domain Method
 
@@ -122,7 +126,7 @@ $$B_{M_2}(x, y) = \sum_{m=1}^{N} A_m \cos(k x \cos\theta_m + k y \sin\theta_m + 
 
 We perform 360 directional scans (1°–360°), fitting this spatial pattern at each angle. Because waves at angles $\theta$ and $\theta + 180°$ produce the same complex spatial field $B_{M_2}(x, y)$, the fitting yields identical amplitudes for both directions, creating symmetric two-lobe polar plots (\autoref{fig:example_frequency_domain}). Step 2 resolves this 180° ambiguity by performing full time-domain fits at both candidate directions and selecting the one with larger amplitude.
 
-This approach achieves substantial speedup by collapsing the time dimension via FFT: instead of fitting 360 directions to 3D spatiotemporal data $(n_t \times n_x \times n_y)$ , we fit 360 directions to 2D spatial data $(n_x \times n_y)$ plus 2 time-domain fits for disambiguation. The method requires evenly-spaced time samples but handles irregular spatial sampling.
+This approach achieves substantial speedup by collapsing the time dimension via FFT: instead of fitting 360 directions to 3D spatiotemporal data $(n_t \times n_x \times n_y)$, we fit 360 directions to 2D spatial data $(n_x \times n_y)$ plus 2 time-domain fits for disambiguation. The method requires evenly-spaced time samples but handles irregular spatial sampling.
 
 The following example demonstrates the frequency-domain method applied to MITgcm LLC4320 model output at 155°E, 45°S in the Tasman Sea, a region of energetic internal tides radiating northwest from the Macquarie Ridge. The SSHA data (hourly output spanning 40 days, May 29 - July 8, 2012) have been preprocessed with a 24-hour temporal high-pass filter and a 500 km spatial high-pass filter. The example dataset is included in the repository. 
 
@@ -155,7 +159,7 @@ The repository includes four Jupyter notebooks demonstrating usage:
 
 # Research impact
 
-PlaneWaveFit provides a modular, open-source implementation for extracting internal tides from SSH data. Applied to SWOT observations in the Southern Ocean [@li2026], the software successfully extracted coherent tidal beams and refraction patterns despite strong mesoscale variability. The technique has been used to map internal tides globally using multi-satellite altimetry [@zhao2016global; @zaron2019baroclinic; @zhao2024internal]. By combining fitted amplitudes with the precomputed database, researchers can estimate depth-integrated energy and flux directly from satellite observations, advancing understanding of tidal dissipation and mixing.
+PlaneWaveFit provides a modular, open-source implementation for extracting internal tides from SSH data. Applied to SWOT observations in the Southern Ocean [@li2026], the software successfully extracts coherent tidal beams and refraction patterns even in the presence of strong mesoscale variability. The technique has been used to map internal tides globally using multi-satellite altimetry [@zhao2016global; @zaron2019baroclinic; @zhao2024internal]. By combining fitted amplitudes with the precomputed database, researchers can estimate depth-integrated energy and flux directly from satellite observations, advancing understanding of tidal dissipation and mixing.
 
 
 # Future Directions
@@ -173,6 +177,6 @@ No generative AI tools were used in the development of this software, the writin
 
 # Acknowledgements
 
-YL acknowledges support from NASA FINESST award 80NSSC22K1529. STG and MRM were supported by NASA SWOT science team (awards 80NSSC20K1136, 80GSFC24CA067). MRM was supported by NOAA awards NA23NOS4000334, NA20OAR4320278, and NASA Modeling, Analysis, and Prediction Program (JPL Subcontract 1716197). STG acknowledges support from NASA Ocean Surface Topography Science Team (80NSSC21K1822).
+YL acknowledges support from NASA FINESST award 80NSSC22K1529. STG and MRM were supported by NASA SWOT science team (awards 80NSSC20K1136, 80NSSC24K1657). MRM was supported by NOAA awards NA23NOS4000334, NA20OAR4320278, and NASA Modeling, Analysis, and Prediction Program (JPL Subcontract 1716197). STG acknowledges support from NASA Ocean Surface Topography Science Team (80NSSC21K1822).
 
 # References
