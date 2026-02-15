@@ -116,7 +116,7 @@ amp2, theta2, phi2, model2, var2, _, _, uncert2 = utils.fit_wave(
 
 ### Frequency-Domain Method
 
-For evenly-sampled data, the frequency-domain method uses a two-step hybrid approach. Step 1 applies temporal FFT to extract the M2 component, reducing the 3D spatiotemporal problem to 2D spatial fitting. This also filters out signals at other frequencies (diurnal tides, mesoscale variability, high-frequency noise) that would otherwise act as noise in the time-domain fitting. The complex spatial field is:
+For evenly-sampled data, the frequency-domain method uses a two-step hybrid approach. Step 1 applies temporal FFT to extract the M2 component, reducing the 3D spatiotemporal problem to 2D spatial fitting. This also filters out signals at other frequencies that would otherwise act as noise in the time-domain fitting. The complex spatial field is:
 
 $$B_{M_2}(x, y) = \sum_{m=1}^{N} A_m \cos(k x \cos\theta_m + k y \sin\theta_m + \phi_m)$$
 
