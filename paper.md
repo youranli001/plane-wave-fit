@@ -150,6 +150,7 @@ The repository includes four Jupyter notebooks demonstrating usage:
 3. `03_access_internal_tide_parameters.ipynb`: Demonstrates how to access and visualize the Zenodo-archived internal tide parameter database.
 4. `04_llc4320_plane_wave_fit_frequency_domain.ipynb`: Demonstrates the frequency-domain method and compares it to the time-domain method using MITgcm LLC4320 model SSH outputs in the Tasman Sea, producing the results shown in \autoref{fig:example_frequency_domain}.
 
+
 # Research impact
 
 PlaneWaveFit provides a modular, open-source implementation for extracting internal tides from SSH data. Applied to SWOT observations in the Southern Ocean [@li2026], the software successfully extracts coherent tidal beams and refraction patterns even in the presence of strong mesoscale variability. The technique has been used to map internal tides globally using multi-satellite altimetry [@zhao2016global; @zaron2019baroclinic; @zhao2024internal]. By combining fitted amplitudes with the precomputed database, researchers can estimate depth-integrated energy and flux directly from satellite observations, advancing understanding of tidal dissipation and mixing.
