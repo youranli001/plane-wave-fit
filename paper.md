@@ -48,7 +48,7 @@ The plane-wave fitting method requires a tidal angular frequency ($\omega$) and 
    b. Depth-integrated potential, kinetic, and total energy density
    c. Depth-integrated horizontal energy flux
    
-The physical derivation of these conversion ratios is detailed by @li2026, Appendix A. As an example, a 4.12 mm fitted surface amplitude at 35°W, 35.5°S corresponds to a depth-integrated horizontal energy flux of 0.35 kW/m using the precomputed conversion ratio. Users with local stratification profiles can compute these directly following Appendix A of @li2026; those working with SSH observations alone can use the precomputed database.
+The physical derivation of these conversion ratios is detailed in Appendix A of @li2026. As an example, a 4.12 mm fitted surface amplitude at 35°W, 35.5°S corresponds to a depth-integrated horizontal energy flux of 0.35 kW/m using the precomputed conversion ratio. Users with local stratification profiles can compute these parameters directly following the same methodology; those working with SSH observations alone can use the precomputed database.
 
 ## 2. Plane-Wave Fitting Algorithm
 
@@ -78,7 +78,7 @@ For each compass direction (angular increment 1°), least-squares fitting determ
 
 The following example demonstrates the method applied to Surface Water and Ocean Topography (SWOT) satellite observations at 35°W, 35.5°S during the calibration/validation phase. The SSH anomaly (SSHA) data have been preprocessed to remove mesoscale variability by subtracting gridded sea level anomalies from multi-mission satellite altimetry.
 
-![Plane wave fit applied to SWOT SSHA data. Top left: SWOT SSHA near 35°W, 35.5°S on April 2, 2023. Remaining panels: polar plots showing fitted amplitude (mm) versus propagation direction for the three most energetic wave components; arrows indicate the selected propagation direction.](figures/figure1.png){#fig:example_timedomain}
+![Plane wave fit applied to SWOT SSHA data. (a) SWOT SSHA near 35°W, 35.5°S on April 2, 2023. (b-d) Polar plots showing fitted amplitude (mm) versus propagation direction for the three most energetic wave components; arrows indicate the selected propagation direction.](figures/figure1.png){#fig:example_timedomain}
 
 **Example: SWOT data**
 ```python
@@ -127,8 +127,7 @@ The frequency-domain method achieves substantial speedup by collapsing the time 
 
 MITgcm LLC4320 is a high-resolution global ocean simulation with 1/48° horizontal resolution and realistic tidal forcing. The following example demonstrates the frequency-domain method applied to this model output at 155°E, 45°S in the Tasman Sea, a region of energetic internal tides radiating northwest from the Macquarie Ridge. The SSHA data (hourly output spanning 40 days, May 29 - July 8, 2012) have been preprocessed with a 24-hour temporal high-pass filter and a 500 km spatial high-pass filter. The example dataset is included in the repository.
 
-![Frequency-domain plane wave fit applied to MITgcm LLC4320 SSHA data in the Tasman Sea. Top left: Preprocessed SSHA snapshot at 155°E, 45°S on June 2, 2012. Remaining panels: polar plots showing fitted amplitude (mm) versus propagation direction for the three most energetic wave components; arrows indicate the selected propagation direction. Note the symmetric two-lobe patterns characteristic of frequency-domain directional scans.](figures/figure2.png){#fig:example_frequency_domain}
-
+![Frequency-domain plane wave fit applied to MITgcm LLC4320 SSHA data in the Tasman Sea. (a) Preprocessed SSHA snapshot at 155°E, 45°S on June 2, 2012. (b-d) Polar plots showing fitted amplitude (mm) versus propagation direction for the three most energetic wave components; arrows indicate the selected propagation direction. Note the symmetric two-lobe patterns characteristic of frequency-domain directional scans.](figures/figure2.png){#fig:example_frequency_domain}
 
 **Example: LLC4320 model output**
 ```python
@@ -151,7 +150,7 @@ The repository includes four Jupyter notebooks demonstrating usage:
 1. `01_time_domain_fitting.ipynb`: Demonstrates the time-domain method on synthetic data containing three internal tides, white noise, and correlated eddy fields with varying amplitudes.
 3. `02_frequency_domain_fitting.ipynb`: Demonstrates the time-domain method on irregularly-sampled SWOT satellite observations in the South Atlantic.  
 4. `03_access_internal_tide_parameters.ipynb`: Demonstrates how to access and visualize the Zenodo-archived internal tide parameter database.
-5. `04_llc4320_plane_wave_fit_frequency_domain.ipynb`:  Demonstrates the frequency-domain method and compares it to the time-domain method using MITgcm LLC4320 model SSH outputs in the Tasman Sea.
+5. `04_llc4320_plane_wave_fit_frequency_domain.ipynb`: Demonstrates the frequency-domain method and compares it to the time-domain method using MITgcm LLC4320 model SSH outputs in the Tasman Sea.
 
 
 # Research impact
