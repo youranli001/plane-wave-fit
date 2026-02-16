@@ -118,8 +118,7 @@ amp2, theta2, phi2, model2, var2, _, _, uncert2 = utils.fit_wave(
 
 For evenly-sampled data, the frequency-domain method uses a two-step hybrid approach. Step 1 applies temporal Fast Fourier Transform (FFT) to extract the M2 component, reducing the 3D spatiotemporal problem to 2D spatial fitting. This also filters out signals at other frequencies that would otherwise act as noise in the time-domain fitting. The complex spatial field is:
 
-$$B_{M_2}(x, y) = \sum_{m=1}^{N} A_m \cos(k x \cos\theta_m + k y \sin\theta_m + \phi_m)$$
-
+$$B_{M_2}(x, y) = \sum_{m=1}^{N} A_m \cos(k x \cos\theta_m + k y \sin\theta_m - \phi_m)$$
 
 We perform 360 directional scans (1°–360°), fitting this spatial pattern at each angle. Because waves at angles $\theta$ and $\theta + 180°$ produce the same complex spatial field $B_{M_2}(x, y)$, the fitting yields identical amplitudes for both directions, creating symmetric two-lobe polar plots (\autoref{fig:example_frequency_domain}, panels b-d). Note that due to this symmetry, scanning only 180 directions would suffice; however, since the computational cost of these 2D spatial fits is negligible, we retain the full 360° scan for implementation simplicity. Step 2 resolves this 180° ambiguity by performing full time-domain fits at both candidate directions and selecting the one with larger amplitude.
 
