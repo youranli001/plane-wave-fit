@@ -146,8 +146,11 @@ The fitting algorithms are implemented in `utils.py`, which provides the core fu
 
 The repository includes four Jupyter notebooks demonstrating usage:
 1. `01_synthetic_data_example.ipynb`: Demonstrates the time-domain method on synthetic data containing three internal tides, white noise, and correlated eddy fields with varying amplitudes.
+   
 2. `02_SWOT_data_example.ipynb`: Demonstrates the time-domain method on irregularly-sampled SWOT satellite observations in the South Atlantic, producing the results shown in \autoref{fig:example_timedomain}.
+  
 3. `03_access_internal_tide_parameters.ipynb`: Demonstrates how to access and visualize the Zenodo-archived internal tide parameter database.
+   
 4. `04_llc4320_plane_wave_fit_frequency_domain.ipynb`: Demonstrates the frequency-domain method and compares it to the time-domain method using MITgcm LLC4320 model SSH outputs in the Tasman Sea, producing the results shown in \autoref{fig:example_frequency_domain}.
 
 
